@@ -6,8 +6,8 @@ from src.filter import filter_papers
 from src.data_processing import extract_features, refine_features, add_other_field, flatten_features
 from src.sankey import clean_sankey_data
 
-PAPER_DIR = "data/Cities/pdf"
-META_DATA_DIR = "papers/metadata/cities.xlsx"
+PAPER_DIR = "data/Cities"
+META_DATA_DIR = "data/metadata/cities.xlsx"
 
 def main():
     meta_data = pd.read_excel(META_DATA_DIR)
@@ -23,30 +23,28 @@ def main():
     with open("data/causal_research_list.json", "w") as f:
         json.dump(causal_research_list, f)
 
-    # step 2: prepare for Sankey diagram
+    # step 2: extract features from the causal research papers
     file_path_list = [os.path.join("data/causal_research_list", file) for file in os.listdir("data/causal_research_list") if file.endswith(".pdf")]
     features = extract_features(file_path_list)
     with open("data/features.json", "w") as f:
         json.dump(features, f)
     
-    # step 3: flatten the dictionary for features
     features = json.load(open("data/features.json"))
     flattened_features = flatten_features(features, meta_data)
     features = add_other_field(flattened_features)
     with open("data/flattened_features.json", "w") as f:
         json.dump(flattened_features, f)
 
-    # step 4: refine features by grouping similar features together
+    # step 3: refine features by grouping similar features together
     features = json.load(open("data/flattened_features.json"))
     features = refine_features(features)
     with open("data/refined_features.json", "w") as f:
         json.dump(features, f)
     
     
-    # step 5: generate Sankey diagram data
+    # step 4: generate Sankey diagram data
     # additional data refinement can be applied manually here before we load the data
     features = json.load(open("data/refined_features.json"))
-
     sankey_data = clean_sankey_data(features)
     sankey_data.to_csv("data/sankey_data.csv", index=False)
 
